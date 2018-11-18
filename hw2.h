@@ -151,7 +151,7 @@ void compute_first(){
     std::vector<std::set<tokens >>& vec();
     vec().reserve(EF); //init vector to the size of terminals + non_terminals
     //init all the first's of the tokens to contain themselves
-    for (int token = KEY; token <EF; token++){
+    for (int token = KEY; token <EF+1; token++){
         vec()[token].insert(token);
     }
 
@@ -205,7 +205,9 @@ void compute_first(){
  * computes follow for all nonterminal (see nonterminal enum in grammar.h)
  * calls print_follow when finished
  */
-void compute_follow();
+void compute_follow(){
+
+}
 
 /**
  * computes select for all grammar rules (see grammar global variable in grammar.h)

@@ -235,6 +235,7 @@ void compute_follow(){
         //for each rule
         for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
             //scan the right hand side of the rule & find the current non terminal
+            index_rhs = 0;
             for(std::vector<int>::const_iterator rhs_it = (*it).rhs.begin(); rhs_it!=(*it).rhs.end(); rhs_it++) {
                 //meant for checking if nothing_changed should be updated (post change)
                 int current_follow_size = follow()[nonterminal].size();

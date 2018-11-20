@@ -4,6 +4,8 @@
 #include "tokens.h"
 #include "grammar.h"
 #include <algorithm>
+#include <map>
+#include <iostream>
 /**
 *** ContainsTerminals by Shani and Racheli
  * input: terminals and nonterminals vector
@@ -249,6 +251,53 @@ std::vector<std::set<tokens >> Follow(){
     return follow();
 
 }
+
+//TODO: add ducomantation
+std::vector<std::set<tokens> > Select(){
+    std::vector<std::set<tokens> > vec();
+    vec().reserve(grammar.size());
+    std::vector<std::set<tokens >> NonTermsFollow = Follow(); //a vector contains all the First of the non terminals
+
+    int i =0; //rules counter
+    for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+        i++;
+        if (IsNullableClause(((*it).rhs))){
+            std::set<tokens> current = vec()[i];
+            std::set_union(ClauseFirst((*it).rhs).begin(),ClauseFirst((*it).rhs).end() ,
+                           NonTermsFollow[(*it).lhs].begin(),NonTermsFollow[(*it).lhs].end(),std::inserter(current,current.begin()));
+        }
+        else{
+            vec()[i] = ClauseFirst((*it).rhs);
+        }
+    }
+    return vec();
+}
+
+//TODO: add documantation
+void computeTable(std::map<nonterminal, std::map<tokens, int>> M){
+    std::vector<std::set<tokens> > select = Select();
+    int counter =0; //rules counter
+
+    // iterate all the rules
+    for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+        std::set<tokens> terminals = select[counter]; // the "select" terminal set of the rule
+        // for each terminal in the select, add mapping between the Non termonal in the lest section of the rule and the map of the terminal and the rule
+        for (std::set<tokens>::const_iterator Terms_it = terminals.begin(); Terms_it != terminals.end(); Terms_it++) {
+            M.insert(((*it).lhs,(terminals,counter)));
+        }
+        counter++;
+
+    }
+}
+
+//TODO: add documantation
+bool MATCH (int X, int t){
+    return (X==t);
+}
+
+
+
+
 /** ======================================== GIVEN FUNCTION STARTS HERE =============================================**/
 
 /**
@@ -275,9 +324,6 @@ void compute_first(){
 }
 
 
-std::set<tokens> compute_follow_lhs(int n){
-
-}
 /**
  * computes follow for all nonterminal (see nonterminal enum in grammar.h)
  * calls print_follow when finished
@@ -292,27 +338,51 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
-    std::vector<std::set<tokens> > vec();
-    vec().reserve(grammar.size());
-    std::vector<std::set<tokens >> NonTermsFollow = Follow(); //a vector contains all the First of the non terminals
-
-    int i =0; //rules counter
-    for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
-        i++;
-            if (IsNullableClause(((*it).rhs))){
-                std::set<tokens> current = vec()[i];
-                std::set_union(ClauseFirst((*it).rhs).begin(),ClauseFirst((*it).rhs).end() ,
-                               NonTermsFollow[(*it).lhs].begin(),NonTermsFollow[(*it).lhs].end(),std::inserter(current,current.begin()));
-            }
-            else{
-                vec()[i] = ClauseFirst((*it).rhs);
-            }
-    }
+    std::vector<std::set<tokens> > vec = Select();
+    print_select(vec());
 }
 /**
  * implements an LL(1) parser for the grammar using yylex()
  */
-void parser();
+void parser(){
+
+    std::vector<int> Q();
+    std::map<nonterminal, std::map<tokens, int>> M;
+    computeTable(M());
+
+    int X; // will contain Q.pop
+    int t = yylex(); // the next token
+    int ruleNum;
+
+    while(1){
+        //TODO: fix yylex
+        if(Q().empty())
+            if (t == '$'){ std::cout << "Success" << std::endl; exit(0);} // $ - end of input
+            else {std::cout << "Syntax error" << std::endl; exit(0);}
+        else
+            X = *(Q().end());
+
+        if (X > 10)
+            MATCH (X,t);
+        else{
+            // PREDICT
+            try{ruleNum = (M.at((nonterminal)X)).at((tokens)t);}
+            catch(std::out_of_range&){std::cout << "Syntax error" << std::endl; exit(0);}
+            std::cout << ruleNum << std::endl; //print the number of rule that was used
+            Q().pop_back(); // get X out of the stack
+            grammar_rule Rule = grammar[ruleNum-1];
+            std::vector<int> ToPush = Rule.rhs;
+            for(std::vector<int>::reverse_iterator var = ToPush.rbegin(); var != ToPush.rend(); ++var){
+                // push the right side of the rule from end to begin
+                Q().push_back(*var);
+            }
+        }
+
+        t = yylex(); // fetch the next token
+    }
+}
+
+
 /*
  * implemented in lex.yy.c (generated from lexer.lex)
  */

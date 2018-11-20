@@ -64,9 +64,9 @@ exit(0);}
 
 %%
 
-void showToken(char*  name)
+tokens showToken(char*  name)
 {
-    printf("%d %s %s\n",yylineno, name, yytext);
+    return (tokens)name;
 }
 
 /*void deleteTrailingSpaces(char* yytext_t, int length){
@@ -236,10 +236,10 @@ void showTokenStr(char*  name)
     else
         NonBlockedStrHandle(n_yytext);
 
-    printf("%d %s %s\n",yylineno, name, n_yytext);
+    return (tokens)name;
 }
 
-void showTokenInt(char*  name)
+tokens showTokenInt(char*  name)
 {
     long decVal =0;
     char* ptr;
@@ -266,7 +266,7 @@ void showTokenInt(char*  name)
         //the number is decimal
         decVal = strtol(yytext, &ptr, 10);
     }
-    printf("%d %s %ld\n",yylineno, name, decVal);
+    return tokens(name);
 }
 
 void showTokenComm(char*  name)

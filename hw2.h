@@ -266,8 +266,12 @@ void compute_nullable(){
  * calls print_first when finished
  */
 void compute_first(){
-    std::vector<std::set<tokens >> vec = First();
-    print_first(vec);
+    std::vector<std::set<tokens >> vec1 = First(); // vec1 contains terminals too
+    std::vector<std::set<tokens >> vec();
+    vec().reserve(NONTERMINAL_ENUM_SIZE);
+    for(int i=0; i<NONTERMINAL_ENUM_SIZE; i++)
+        vec()[i] = vec1[i];  //copy all the non terminals to vec
+    print_first(vec());
 }
 
 

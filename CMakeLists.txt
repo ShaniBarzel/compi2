@@ -1,8 +1,6 @@
-all: clean
-flex -o lex.yy.c lexer.lex
-g++ -o hw2 *.cpp *.c
+cmake_minimum_required(VERSION 3.10)
+project(compi2)
 
-clean:
-rm -f lex.yy.c
-rm -f hw2
+set(CMAKE_CXX_STANDARD 11)
 
+add_executable(compi2 main.cpp)

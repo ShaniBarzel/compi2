@@ -219,7 +219,8 @@ void compute_select(){
 
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
             if (IsNullableClause(((*it).rhs))){
-                std::set_union(vec.begin(), first().end() ,VarFirst[i].begin(),
+                std::set<tokens> current = vec().insert();
+                std::set_union(current.begin(), first().end() ,VarFirst[i].begin(),
                                VarFirst()[i].end(),std::inserter(first(),first().begin()));
             }
             else{

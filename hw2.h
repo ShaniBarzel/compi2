@@ -203,11 +203,65 @@ void compute_first(){
 }
 
 
+std::vector<std::set<tokens>> compute_follow_lhs(int n){
+
+}
 /**
  * computes follow for all nonterminal (see nonterminal enum in grammar.h)
  * calls print_follow when finished
  */
-void compute_follow();
+void compute_follow(){
+    std::vector<std::set<tokens >>& follow();
+    follow().reserve(EF); //init vector to the size of non_terminals
+    follow()[S].insert(EF);
+    bool done = false;
+    int nonterminal = S;
+    bool nothing_changed = true;
+    while(!done){
+        if (nonterminal == NONTERMINAL_ENUM_SIZE){
+            if (nothing_changed){
+                //no changes has done compering to last iteration over all the non-terminal - no more updates
+                done = true;
+                continue;
+            }
+            else{
+                //there was some changes compering to the last iteration, start itarating over all the non terminal once again
+                nothing_changed = true;
+                nonterminal = S;
+            }
+        }
+        //for each rule
+        for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+            //scan the right hand side of the rule & find the current non terminal
+            for(std::vector<int>::const_iterator rhs_it = (*it).rhs.begin(); rhs_it!=(*it).rhs.end(); rhs_it++) {
+                //meant for checking if nothing_changed should be updated (post change)
+                int current_follow_size = follow()[nonterminal].size();
+                if(rhs_it.rhs != nonterminal)
+                    continue;
+                else{
+                    //compute first set of clause
+                    std::vector<std::set<tokens >>& first();
+                    first = compute_first_clause(rhs_it + 1, (*it).rhs.end());
+                    std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), first().begin(),
+                                   first().end(),follow()[nonterminal].begin(), follow()[nonterminal].end());
+                    if (is_nullable_clause(rhs_it + 1, (*it).rhs.end())){
+                        std::vector< std::set<tokens> >& follow_lhs();
+                        follow_lhs = compute_follow_lhs((*it).lhs);
+                        std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), follow_lhs().begin(),
+                                       follow_lhs().end() ,follow()[nonterminal].begin(), follow()[nonterminal].end());
+                    }
+                    int new_follow_size = follow()[nonterminal].size();
+
+                    if (new_follow_size != current_follow_size)
+                        nothing_changed = false;
+                }
+
+            }
+        }
+        nonterminal++;
+    }
+
+}
 
 /**
  * computes select for all grammar rules (see grammar global variable in grammar.h)

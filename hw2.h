@@ -3,7 +3,7 @@
 
 #include "tokens.h"
 #include "grammar.h"
-
+#include <algorithm>
 /**
 *** ContainsTerminals by Shani and Racheli
  * input: terminals and nonterminals vector
@@ -161,7 +161,7 @@ std::set<tokens> ClauseFirst(std::vector<int> clause){
     for(int i = 0; i<clause.size(); i++) {
         //for all terminals and non terminals in the clause, unite them with the current First of the clause
         std::set_union(first().begin(), first().end() ,VarFirst[i].begin(),
-                       VarFirst()[i].end(),std::inserter(first(),first().begin()));
+                       VarFirst[i].end(),std::inserter(first,first().begin()));
     }
     return first();
 }
@@ -181,40 +181,14 @@ bool IsNullableClause(std::vector<int> clause){
     return true;
 }
 
-
-/** ======================================== GIVEN FUNCTION STARTS HERE =============================================**/
-
 /**
- * determines which variables are nullable, i.e. can produce an empty word
- * calls print_nullable when finished
+ * input: -
+ * output: a vector that contains the follow of each Non Terminal
  */
-void compute_nullable(){
-    std::vector<bool> IsNonterminalsNullable = IsNullableNon(); //answer vector
-    //init answer vector to false
-    print_nullable(IsNonterminalsNullable);
-}
-
-/**
- * computes first for all nonterminal (see nonterminal enum in grammar.h)
- * calls print_first when finished
- */
-void compute_first(){
-    std::vector<std::set<tokens >> vec = First();
-    print_first(vec);
-}
-
-
-std::set<tokens> compute_follow_lhs(int n){
-
-}
-/**
- * computes follow for all nonterminal (see nonterminal enum in grammar.h)
- * calls print_follow when finished
- */
-void compute_follow(){
+std::vector<std::set<tokens >> Follow(){
     std::vector<std::set<tokens >> follow();
     follow().reserve(EF); //init vector to the size of non_terminals
-    follow()[S].insert(EF);
+    follow()[S].insert(EF); //EF is representing $
     bool done = false;
     int nonterminal = S;
     bool nothing_changed = true;
@@ -248,7 +222,7 @@ void compute_follow(){
                     //compute first set of clause
                     std::set<tokens > first;
                     std::vector<int> clause;
-                    int index = 0;
+                    int index = index_rhs;
                     while(index < (*it).rhs.size()){
                         clause[index] = rhs_it[index + 1];
                         index++;
@@ -258,7 +232,7 @@ void compute_follow(){
                                    first.end(),follow()[nonterminal].begin(), follow()[nonterminal].end());
                     if (IsNullableClause(clause)){
                         std::set<tokens> follow_lhs;
-                        follow_lhs = compute_follow_lhs((*it).lhs);
+                        follow_lhs = follow()[(*it).lhs];
                         std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), follow_lhs.begin(),
                                        follow_lhs.end() ,follow()[nonterminal].begin(), follow()[nonterminal].end());
                     }
@@ -272,6 +246,40 @@ void compute_follow(){
         }
         nonterminal++;
     }
+    return follow();
+
+}
+/** ======================================== GIVEN FUNCTION STARTS HERE =============================================**/
+
+/**
+ * determines which variables are nullable, i.e. can produce an empty word
+ * calls print_nullable when finished
+ */
+void compute_nullable(){
+    std::vector<bool> IsNonterminalsNullable = IsNullableNon(); //answer vector
+    //init answer vector to false
+    print_nullable(IsNonterminalsNullable);
+}
+
+/**
+ * computes first for all nonterminal (see nonterminal enum in grammar.h)
+ * calls print_first when finished
+ */
+void compute_first(){
+    std::vector<std::set<tokens >> vec = First();
+    print_first(vec);
+}
+
+
+std::set<tokens> compute_follow_lhs(int n){
+    std::vector<std::set<tokens >> vec = Follow();
+    print_follow(vec);
+}
+/**
+ * computes follow for all nonterminal (see nonterminal enum in grammar.h)
+ * calls print_follow when finished
+ */
+void compute_follow(){
 
 }
 
@@ -280,8 +288,9 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
-    std::vector<std::set<tokens> >& vec();
+    std::vector<std::set<tokens> > vec();
     vec().reserve(grammar.size());
+    std::vector<std::set<tokens >> NonTermsFollow = Follow(); //a vector contains all the First of the non terminals
 
     int i =0; //rules counter
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
@@ -289,7 +298,7 @@ void compute_select(){
             if (IsNullableClause(((*it).rhs))){
                 std::set<tokens> current = vec()[i];
                 std::set_union(ClauseFirst((*it).rhs).begin(),ClauseFirst((*it).rhs).end() ,
-                               NonTermFollow((*it).rhs).begin(),NonTermFollow((*it).rhs).end(),std::inserter(current,current.begin()));
+                               NonTermsFollow[(*it).lhs].begin(),NonTermsFollow[(*it).lhs].end(),std::inserter(current,current.begin()));
             }
             else{
                 vec()[i] = ClauseFirst((*it).rhs);

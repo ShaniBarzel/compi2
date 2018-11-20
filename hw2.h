@@ -204,7 +204,7 @@ void compute_first(){
 }
 
 
-std::vector<std::set<tokens>> compute_follow_lhs(int n){
+std::set<tokens> compute_follow_lhs(int n){
 
 }
 /**
@@ -212,12 +212,13 @@ std::vector<std::set<tokens>> compute_follow_lhs(int n){
  * calls print_follow when finished
  */
 void compute_follow(){
-    std::vector<std::set<tokens >>& follow();
+    std::vector<std::set<tokens >> follow();
     follow().reserve(EF); //init vector to the size of non_terminals
     follow()[S].insert(EF);
     bool done = false;
     int nonterminal = S;
     bool nothing_changed = true;
+    int index_rhs = 0;
     while(!done){
         if (nonterminal == NONTERMINAL_ENUM_SIZE){
             if (nothing_changed){
@@ -237,19 +238,28 @@ void compute_follow(){
             for(std::vector<int>::const_iterator rhs_it = (*it).rhs.begin(); rhs_it!=(*it).rhs.end(); rhs_it++) {
                 //meant for checking if nothing_changed should be updated (post change)
                 int current_follow_size = follow()[nonterminal].size();
-                if(rhs_it.rhs() != nonterminal)
+                if(rhs_it[index_rhs] != nonterminal){
+                    index_rhs++;
                     continue;
+                }
+
                 else{
                     //compute first set of clause
-                    std::vector<std::set<tokens >>& first();
-                    first = compute_first_clause(rhs_it + 1, (*it).rhs.end());
-                    std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), first().begin(),
-                                   first().end(),follow()[nonterminal].begin(), follow()[nonterminal].end());
-                    if (is_nullable_clause(rhs_it + 1, (*it).rhs.end())){
-                        std::vector< std::set<tokens> >& follow_lhs();
+                    std::set<tokens > first;
+                    std::vector<int> clause;
+                    int index = 0;
+                    while(index < (*it).rhs.size()){
+                        clause[index] = rhs_it[index + 1];
+                        index++;
+                    }
+                    first = ClauseFirst(clause);
+                    std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), first.begin(),
+                                   first.end(),follow()[nonterminal].begin(), follow()[nonterminal].end());
+                    if (IsNullableClause(clause)){
+                        std::set<tokens> follow_lhs;
                         follow_lhs = compute_follow_lhs((*it).lhs);
-                        std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), follow_lhs().begin(),
-                                       follow_lhs().end() ,follow()[nonterminal].begin(), follow()[nonterminal].end());
+                        std::set_union(follow()[nonterminal].begin(), follow()[nonterminal].end(), follow_lhs.begin(),
+                                       follow_lhs.end() ,follow()[nonterminal].begin(), follow()[nonterminal].end());
                     }
                     int new_follow_size = follow()[nonterminal].size();
 
@@ -269,7 +279,7 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
-    std::vector<std::set<tokens> > vec();
+    std::vector<std::set<tokens> >& vec();
     vec().reserve(grammar.size());
 
     int i =0; //rules counter

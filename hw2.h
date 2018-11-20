@@ -219,7 +219,8 @@ void compute_select(){
 
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
             if (IsNullableClause(((*it).rhs))){
-                vec().insert(ClauseFirst((*it).rhs))
+                std::set_union(vec.begin(), first().end() ,VarFirst[i].begin(),
+                               VarFirst()[i].end(),std::inserter(first(),first().begin()));
             }
             else{
                 vec().insert(ClauseFirst((*it).rhs));

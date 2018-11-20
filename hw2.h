@@ -272,15 +272,15 @@ void compute_first(){
 
 
 std::set<tokens> compute_follow_lhs(int n){
-    std::vector<std::set<tokens >> vec = Follow();
-    print_follow(vec);
+
 }
 /**
  * computes follow for all nonterminal (see nonterminal enum in grammar.h)
  * calls print_follow when finished
  */
 void compute_follow(){
-
+    std::vector<std::set<tokens >> vec = Follow();
+    print_follow(vec);
 }
 
 /**

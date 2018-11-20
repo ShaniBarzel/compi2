@@ -22,16 +22,16 @@ bool ContainsTerminals(std::vector<int> tavnit){
  * output: true if the rule is "nullable" = the variable in the right section of the rule, can derive epsilon by using this rule
  */
 bool CheckNullRule(grammar_rule Gr, std::vector<bool> IsNonterminalsNullable){
-    if (Gr.rhs().empty())
+    if (Gr.rhs.empty())
         return true; //the rule has only epsilon in the right section
 
-    if (ContainsTerminals(Gr.rhs()))
+    if (ContainsTerminals(Gr.rhs))
         return false; //the rule contains terminal in the right section (so the rule is not nullable)
 
     //if we reached here, the rule contains only non-terminals in the right section
 
     //iterate all the non-terminals in the right section of the rule
-    for ( std::vector<int>::const_iterator R_it = Gr.rhs().begin(); R_it != Gr.rhs.end(); R_it++){
+    for ( std::vector<int>::const_iterator R_it = Gr.rhs.begin(); R_it != Gr.rhs.end(); R_it++){
        if (IsNonterminalsNullable[*R_it] == false)
            return false; //one of the non-terminals in the right section is not nullable
     }
@@ -45,9 +45,10 @@ bool CheckNullRule(grammar_rule Gr, std::vector<bool> IsNonterminalsNullable){
  */
 std::vector<bool> IsNullableNon(){
     std::vector<bool> IsNonterminalsNullable(); //answer vector
+    IsNonterminalsNullable().reserve(NONTERMINAL_ENUM_SIZE);
     //init answer vector to false
     for (int i=0; i< NONTERMINAL_ENUM_SIZE; i++){
-        IsNonterminalsNullable().insert(false);
+        IsNonterminalsNullable()[i]=false;;
     }
 
     bool nothing_changed = true;
@@ -96,11 +97,11 @@ std::vector<bool> IsNullableNon(){
  * output: a vector, containing the first of all variabls
  */
 std::vector<std::set<tokens>> First(){
-    std::vector<std::set<tokens >>& vec();
+    std::vector<std::set<tokens >> vec();
     vec().reserve(EF); //init vector to the size of terminals + non_terminals
     //init all the first's of the tokens to contain themselves
     for (int token = KEY; token <EF; token++){
-        vec()[token].insert(token);
+        vec()[token].insert(tokens(token));
     }
 
     bool nothing_changed = true;
@@ -138,7 +139,7 @@ std::vector<std::set<tokens>> First(){
                         nothing_changed = false; //if we reached here, than the current non-terminal first's was updated
 
                     // if the current variable is not nullable, the rest of the right secion variables is irrelevent
-                    if (!IsNullableNon(*R_it))
+                    if (!IsNullableNon()[*R_it])
                         break; // (from inner for)
                 }
             }
@@ -190,7 +191,7 @@ bool IsNullableClause(std::vector<int> clause){
 void compute_nullable(){
     std::vector<bool> IsNonterminalsNullable = IsNullableNon(); //answer vector
     //init answer vector to false
-    print_nullable(IsNonterminalsNullable());
+    print_nullable(IsNonterminalsNullable);
 }
 
 /**
@@ -198,8 +199,8 @@ void compute_nullable(){
  * calls print_first when finished
  */
 void compute_first(){
-    std::vector<std::set<tokens >>& vec() = First();
-    print_first(vec());
+    std::vector<std::set<tokens >> vec = First();
+    print_first(vec);
 }
 
 
@@ -236,7 +237,7 @@ void compute_follow(){
             for(std::vector<int>::const_iterator rhs_it = (*it).rhs.begin(); rhs_it!=(*it).rhs.end(); rhs_it++) {
                 //meant for checking if nothing_changed should be updated (post change)
                 int current_follow_size = follow()[nonterminal].size();
-                if(rhs_it.rhs != nonterminal)
+                if(rhs_it.rhs() != nonterminal)
                     continue;
                 else{
                     //compute first set of clause
@@ -268,17 +269,19 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
-    std::vector<std::set<tokens> >& vec();
+    std::vector<std::set<tokens> > vec();
     vec().reserve(grammar.size());
 
+    int i =0; //rules counter
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+        i++;
             if (IsNullableClause(((*it).rhs))){
-                std::set<tokens> current = vec().insert();
-                std::set_union(current.begin(), first().end() ,VarFirst[i].begin(),
-                               VarFirst()[i].end(),std::inserter(first(),first().begin()));
+                std::set<tokens> current = vec()[i];
+                std::set_union(ClauseFirst((*it).rhs).begin(),ClauseFirst((*it).rhs).end() ,
+                               NonTermFollow((*it).rhs).begin(),NonTermFollow((*it).rhs).end(),std::inserter(current,current.begin()));
             }
             else{
-                vec().insert(ClauseFirst((*it).rhs));
+                vec()[i] = ClauseFirst((*it).rhs);
             }
     }
 }

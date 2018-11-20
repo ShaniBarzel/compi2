@@ -218,7 +218,12 @@ void compute_select(){
     vec().reserve(grammar.size());
 
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
-
+            if (IsNullableClause(((*it).rhs))){
+                vec().insert(ClauseFirst((*it).rhs))
+            }
+            else{
+                vec().insert(ClauseFirst((*it).rhs));
+            }
     }
 }
 /**

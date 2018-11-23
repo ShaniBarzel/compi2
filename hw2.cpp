@@ -97,8 +97,11 @@ std::vector<bool> IsNullableNon(){
  * output: a vector, containing the first of all variabls
  */
 std::vector<std::set<tokens> > First(){
-    std::vector<std::set<tokens> > vec;
-    vec.reserve(EF); //init vector to the size of terminals + non_terminals
+    std::vector<std::set<tokens> > vec;     //debug rach
+  // vec.reserve(EF); //init vector to the size of terminals + non_terminals
+   for(int i=0;i<EF;i++){
+        vec.insert(vec.begin()+i,std::set<tokens>());
+    }
     //init all the first's of the tokens to contain themselves
     for (int token = KEY; token <EF; token++){
         vec[token].insert(tokens(token));
@@ -190,15 +193,22 @@ bool IsNullableClause(const std::vector<int> clause){
 std::vector<std::set<tokens> > Follow(){
     std::vector<std::set<tokens> > follow;
     //follow.reserve(EF); //init vector to the size of non_terminals
-    std::set<tokens> Set;
-    Set.insert(EF); //EF is representing $
-    follow.insert(follow.begin(),Set);
+    std::set<tokens> first_set;
+    for (int i=0;i<NONTERMINAL_ENUM_SIZE;i++){
+        follow.insert(follow.begin()+i, std::set<tokens >());
+    }
+    follow[S].insert(EF);
+   /* first_set.insert(EF); //EF is representing $
+    follow.insert(follow.begin(),first_set);
+*/
+   // follow.insert(follow.begin(),Set);
     //follow.insert(EF); //EF is representing $
     bool done = false;
     int nonterminal = S;
     bool nothing_changed = true;
     int index_rhs = 0;
     while(!done){
+
         if (nonterminal == NONTERMINAL_ENUM_SIZE){
             if (nothing_changed){
                 //no changes has done compering to last iteration over all the non-terminal - no more updates
@@ -218,37 +228,54 @@ std::vector<std::set<tokens> > Follow(){
             for(std::vector<int>::const_iterator rhs_it = (*it).rhs.begin(); rhs_it!=(*it).rhs.end(); rhs_it++) {
                 //meant for checking if nothing_changed should be updated (post change)
                 int current_follow_size = follow[nonterminal].size();
-                if(rhs_it[index_rhs] != nonterminal){
+               /* if((*it).rhs[index_rhs] != nonterminal){
+                //if(rhs_it[index_rhs] != nonterminal){
                     index_rhs++;
                     continue;
-                }
+                }*/
 
-                else{
+                if((int)(*rhs_it) == nonterminal) {
                     //compute first set of clause
                     std::set<tokens> first;
                     std::vector<int> clause;
-                    int index = index_rhs;
-                    while(index < (*it).rhs.size()){
-                        clause[index] = rhs_it[index + 1];
+                    int index = index_rhs + 1;
+                    int index_clause = 0;
+                    /*  for(int i=0;i<(*it).rhs.size()-index;i++){
+                          clause[i]=0;
+                      }*/
+                    printf("\nsize of rhs = %d\n", (*it).rhs.size());
+                    while (index < (*it).rhs.size()) {
+                        clause.insert(clause.begin() + index_clause, *(rhs_it + index));
+                        //  clause[index_clause] = (int)((*it).rhs[index]);
                         index++;
+                        index_clause++;
                     }
                     first = ClauseFirst(clause);
+
                     std::set_union(follow[nonterminal].begin(), follow[nonterminal].end(), first.begin(),
-                                   first.end(),std::inserter(follow[nonterminal],follow[nonterminal].begin()));
-                    if (IsNullableClause(clause)){
+                                   first.end(), std::inserter(follow[nonterminal], follow[nonterminal].begin()));
+                    if (IsNullableClause(clause)) {
                         std::set<tokens> follow_lhs;
                         follow_lhs = follow[(*it).lhs];
                         std::set_union(follow[nonterminal].begin(), follow[nonterminal].end(), follow_lhs.begin(),
-                                       follow_lhs.end() ,std::inserter(follow[nonterminal],follow[nonterminal].begin()));
+                                       follow_lhs.end(),
+                                       std::inserter(follow[nonterminal], follow[nonterminal].begin()));
                     }
+
+                }
+                else{
+                    index_rhs++;
+                }
                     int new_follow_size = follow[nonterminal].size();
 
                     if (new_follow_size != current_follow_size)
                         nothing_changed = false;
-                }
+
+
 
             }
         }
+        printf("\ncurr non term = %d\n", nonterminal);
         nonterminal++;
     }
     return follow;
@@ -257,8 +284,12 @@ std::vector<std::set<tokens> > Follow(){
 
 //TODO: add ducomantation
 std::vector<std::set<tokens> > Select(){
+
     std::vector<std::set<tokens> > vec;
-    vec.reserve(grammar.size());
+    //vec.reserve(grammar.size());
+    for(int i=0;i<grammar.size();i++){
+        vec.insert(vec.begin()+i,std::set<tokens>());
+    }
     std::vector<std::set<tokens> > NonTermsFollow = Follow(); //a vector contains all the First of the non terminals
 
     int i =0; //rules counter
@@ -322,7 +353,10 @@ void compute_nullable(){
 void compute_first(){
     std::vector<std::set<tokens> > vec1 = First(); // vec1 contains terminals too
     std::vector<std::set<tokens> > vec;
-    vec.reserve(NONTERMINAL_ENUM_SIZE);
+   // vec.reserve(NONTERMINAL_ENUM_SIZE);
+    for(int i=0; i<NONTERMINAL_ENUM_SIZE;i++){
+        vec.insert(vec.begin()+i,std::set<tokens>());
+    }
     for(int i=0; i<NONTERMINAL_ENUM_SIZE; i++)
         vec[i] = vec1[i];  //copy all the non terminals to vec
     print_first(vec);
@@ -358,12 +392,13 @@ void parser(){
     int X; // will contain Q.pop
     //int t = yylex(); // the next token
     int t = SECTION; //for debug
+    //int index_d=0;
     int ruleNum;
 
 
     while(true){
         //TODO: fix yylex
-        if(Q.empty()) //todo: tell racheli i changed it to EF
+        if(Q.empty())
             if (t == EF){ std::cout << "Success" << std::endl; exit(0);} // $ - end of input
             else {std::cout << "Syntax error" << std::endl; exit(0);}
         else
@@ -384,9 +419,14 @@ void parser(){
                 Q.push_back(*var);
             }
         }
-
+        /*index_d++;
+        if(index_d==1)
+            t = KEY;
+        if(index_d==2)
+            t = STRING;*/
         //t = yylex(); // fetch the next token
-        t=EF; //for debug
+       // else
+            t=EF; //for debug
     }
 }
 

@@ -287,8 +287,8 @@ std::vector<std::set<tokens> > Select(){
 
     std::vector<std::set<tokens> > vec;
     //vec.reserve(grammar.size());
-    for(int i=0;i<grammar.size();i++){
-        vec.insert(vec.begin()+i,std::set<tokens>());
+    for(int k=0;k<grammar.size();k++){
+        vec.insert(vec.begin()+k,std::set<tokens>());
     }
     std::vector<std::set<tokens> > NonTermsFollow;
     for(int j=0;j<NONTERMINAL_ENUM_SIZE;j++){
@@ -298,7 +298,6 @@ std::vector<std::set<tokens> > Select(){
 
     int i =0; //rules counter
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
-        i++;
         std::set<tokens > first_set_rhs = ClauseFirst((*it).rhs);
         if (IsNullableClause(((*it).rhs))){
 
@@ -307,9 +306,10 @@ std::vector<std::set<tokens> > Select(){
                            std::inserter(vec[i],vec[i].begin()));
         }
         else{
-           // vec[i] = ClauseFirst((*it).rhs);
-            vec.insert(vec.begin()+i,first_set_rhs);
+            vec[i] = first_set_rhs;
+          //  vec.insert(vec.begin()+i,first_set_rhs);
         }
+        i++;
     }
     return vec;
 }
@@ -414,7 +414,7 @@ void parser(){
                 exit(0);
             } // $ - end of input
             else {
-                std::cout << "Syntax error r" << std::endl;
+                std::cout << "Syntax error" << std::endl;
                 exit(0);
             }
         }
@@ -425,7 +425,7 @@ void parser(){
             MATCH (X,t);
         else{
             // PREDICT
-            try{ruleNum = (M.at((nonterminal)X)).at((tokens)t);}
+            try{ruleNum = ((M.at((nonterminal)X))).at((tokens)t);}
             catch (...){std::cout << "Syntax error" << std::endl; exit(0);}
             std::cout << ruleNum << std::endl; //print the number of rule that was used
             Q.pop_back(); // get X out of the stack

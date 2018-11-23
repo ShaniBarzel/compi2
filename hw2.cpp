@@ -419,7 +419,7 @@ void parser(){
             }
         }
         else
-            X = *(Q.end());
+            X = (Q.front());
 
         if (X > 10)
             MATCH (X,t);

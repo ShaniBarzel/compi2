@@ -243,7 +243,7 @@ std::vector<std::set<tokens> > Follow(){
                     /*  for(int i=0;i<(*it).rhs.size()-index;i++){
                           clause[i]=0;
                       }*/
-                    printf("\nsize of rhs = %d\n", (*it).rhs.size());
+                   // printf("\nsize of rhs = %d\n", (*it).rhs.size());
                     while (index < (*it).rhs.size()) {
                         clause.insert(clause.begin() + index_clause, *(rhs_it + index));
                         //  clause[index_clause] = (int)((*it).rhs[index]);
@@ -290,18 +290,25 @@ std::vector<std::set<tokens> > Select(){
     for(int i=0;i<grammar.size();i++){
         vec.insert(vec.begin()+i,std::set<tokens>());
     }
-    std::vector<std::set<tokens> > NonTermsFollow = Follow(); //a vector contains all the First of the non terminals
+    std::vector<std::set<tokens> > NonTermsFollow;
+    for(int j=0;j<NONTERMINAL_ENUM_SIZE;j++){
+        NonTermsFollow.insert(NonTermsFollow.begin()+j,std::set<tokens>());
+    }
+    NonTermsFollow = Follow(); //a vector contains all the follow sets of the non terminals
 
     int i =0; //rules counter
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
         i++;
+        std::set<tokens > first_set_rhs = ClauseFirst((*it).rhs);
         if (IsNullableClause(((*it).rhs))){
-            std::set_union(ClauseFirst((*it).rhs).begin(),ClauseFirst((*it).rhs).end() ,
+
+            std::set_union(first_set_rhs.begin(),first_set_rhs.end() ,
                            NonTermsFollow[(*it).lhs].begin(),NonTermsFollow[(*it).lhs].end(),
                            std::inserter(vec[i],vec[i].begin()));
         }
         else{
-            vec[i] = ClauseFirst((*it).rhs);
+           // vec[i] = ClauseFirst((*it).rhs);
+            vec.insert(vec.begin()+i,first_set_rhs);
         }
     }
     return vec;

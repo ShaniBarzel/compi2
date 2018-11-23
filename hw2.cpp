@@ -189,8 +189,11 @@ bool IsNullableClause(const std::vector<int> clause){
  */
 std::vector<std::set<tokens> > Follow(){
     std::vector<std::set<tokens> > follow;
-    follow.reserve(EF); //init vector to the size of non_terminals
-    follow[S].insert(EF); //EF is representing $
+    //follow.reserve(EF); //init vector to the size of non_terminals
+    std::set<tokens> Set;
+    Set.insert(EF); //EF is representing $
+    follow.insert(follow.begin(),Set);
+    //follow.insert(EF); //EF is representing $
     bool done = false;
     int nonterminal = S;
     bool nothing_changed = true;
@@ -353,13 +356,15 @@ void parser(){
     computeTable(M);
 
     int X; // will contain Q.pop
-    int t = yylex(); // the next token
+    //int t = yylex(); // the next token
+    int t = SECTION; //for debug
     int ruleNum;
+
 
     while(true){
         //TODO: fix yylex
-        if(Q.empty())
-            if (t == '$'){ std::cout << "Success" << std::endl; exit(0);} // $ - end of input
+        if(Q.empty()) //todo: tell racheli i changed it to EF
+            if (t == EF){ std::cout << "Success" << std::endl; exit(0);} // $ - end of input
             else {std::cout << "Syntax error" << std::endl; exit(0);}
         else
             X = *(Q.end());
@@ -380,7 +385,8 @@ void parser(){
             }
         }
 
-        t = yylex(); // fetch the next token
+        //t = yylex(); // fetch the next token
+        t=EF; //for debug
     }
 }
 

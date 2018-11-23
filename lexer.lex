@@ -3,6 +3,9 @@
 /* Declarations section */
 #include <stdio.h>
 #include <stdlib.h> //for strtol
+#include <ctype.h> //for isxdigit
+#include "tokens.h"
+#include <string.h> //for strcmp
 void showToken(char* name);
 void showTokenStr(char* name);
 void showTokenInt(char* name);
@@ -14,7 +17,7 @@ void showTokenComm(char* name);
 %option caseless
 digit   		[0-9]
 decimal      	(\x2B|\x2D)?({digit})+
-hex          	(0x)([a-f]|{digit})+
+hex          	(0x)([a-f]|{digit})*
 oct          	0([0-7])*
 bin          	0b([0-1])*
 integer      	{decimal}|{hex}|{oct}|{bin}
@@ -37,14 +40,14 @@ path        	(\x2F)+(({dirname})*(\x2F)*)*
 link        	(\x24)((\x7B{key}\x7D)|(\x7B{key}\x23{key}\x7D))
 sep         	(\x2C)
 string1      	(\x22)(([\x09\x20-\x21\x23-\x5B\x5D-\x7E])|((\x5C)([\x20-\x7E]))|({line}))*(\x5C)?(\x22)?
-string2     	{letter}+(([\x21-\x22\x24-\x2B\x2D-\x3A\x3C-\x7E])|((\x20)+([\x21-\x22\x24-\x2B\x2D-\x3A\x3C-\x7E])))*
+string2     	{letter}+(([\x21-\x22\x24-\x2B\x2D-\x3A\x3C-\x7E])|((\x09|\x20)+([\x21-\x22\x24-\x2B\x2D-\x3A\x3C-\x7E])))*
 string      	({string1}|{string2})
 comment     	({indent})*((\x23)|(\x3B))[^(\x0A|\x0D|(\x0D\x0A))]*
 
 %s ka in k
 %%
-^{key}									 {showToken("KEY"); BEGIN(k);}
-<k,ka>{assign}	   	 					 {showToken("ASSIGN"); BEGIN(ka);}
+^{key}									 {showToken((const char*)"KEY"); BEGIN(k);}
+<k,ka>{assign}	   	 					 {showToken((const char*)"ASSIGN"); BEGIN(ka);}
 {section}	 					 		 {showToken("SECTION");}
 ^{indent}       						 {showToken("INDENT"); BEGIN(in);}
 {comment}					  		     {showTokenComm("COMMENT");}
@@ -64,25 +67,20 @@ exit(0);}
 
 %%
 
-tokens showToken(char*  name)
-{
-    return (tokens)name;
+int NameToToken(const char* name){
+    const char* convert[]={"KEY","SECTION","INDENT","ASSIGN","TRUE","FALSE","INTEGER","REAL","STRING","PATH","LINK","SEP","EOF"};
+    for(int i=(int)KEY; i<((int)EF+1); i++){
+        if (strcmp(name,convert[i]))
+            return i;
+    }
+    return -1; //we shouldnt reach here
 }
 
-/*void deleteTrailingSpaces(char* yytext_t, int length){
-		//delete trailing tabs & whitespaces
-		int spaces_counter = 0;
-		int index=0;
-		int index_t=yyleng-1;
-	while(yytext_t[index_t]=='\t' || yytext_t[index_t]=='\x20'){
-		spaces_counter++;
-		index_t--;
-	}
-	while(index!=yyleng-spaces_counter){
-		yytext_n[index]=yytext_t[index];
-		index++;
-	}
-}*/
+void showToken(char*  name)
+{
+    printf("%d", tokens(NameToToken(name)));
+}
+
 
 void NonBlockedStrHandle(char* n_yytext){
     //this function copies the string as it is
@@ -117,9 +115,9 @@ void BlockedStrHandle(int leng, char* yytext_t,char* n_yytext){
                 hexVal[1] = yytext_t[i+2];
                 //strtol converts string to int. "16" is for hex value
                 int decVal = (int)strtol(hexVal, &ptr, 16);
-                if (decVal<0 || decVal > 255){
+                if (decVal<0 || decVal > 255 || !isxdigit(hexVal[0]) ||!isxdigit(hexVal[1])){
                     // \xdd - but dd is not a valid ascii value
-                    printf("Error undifined escape sequence %c%c%c\n", yytext_t[i],yytext_t[i+1],yytext_t[i+2]);
+                    printf("Error undifined escape sequence %c\n", yytext_t[i]);
                     exit(0);
                 }
                 else{
@@ -236,10 +234,10 @@ void showTokenStr(char*  name)
     else
         NonBlockedStrHandle(n_yytext);
 
-    return (tokens)name;
+    showToken(n_yytext);
 }
 
-tokens showTokenInt(char*  name)
+void showTokenInt(char*  name)
 {
     long decVal =0;
     char* ptr;
@@ -266,7 +264,7 @@ tokens showTokenInt(char*  name)
         //the number is decimal
         decVal = strtol(yytext, &ptr, 10);
     }
-    return tokens(name);
+   showToken(name);
 }
 
 void showTokenComm(char*  name)

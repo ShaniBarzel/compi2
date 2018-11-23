@@ -3,4 +3,4 @@ project(compi2)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(compi2 main.cpp grammar.cpp hw2.h grammar.h tokens.h)
+add_executable(compi2 main.cpp grammar.cpp hw2.h hw2.cpp grammar.h tokens.h)

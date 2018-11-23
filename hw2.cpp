@@ -393,6 +393,8 @@ void compute_select(){
 void parser(){
 
     std::vector<int> Q;
+    //initialization (rach)
+    Q.push_back(nonterminal(S));
     std::map<nonterminal, std::map<tokens, int> > M;
     computeTable(M);
 
@@ -405,9 +407,17 @@ void parser(){
 
     while(true){
         //TODO: fix yylex
-        if(Q.empty())
-            if (t == EF){ std::cout << "Success" << std::endl; exit(0);} // $ - end of input
-            else {std::cout << "Syntax error" << std::endl; exit(0);}
+        if(Q.empty()) {
+           // printf("\nhi\n");
+            if (t == EF) {
+                std::cout << "Success" << std::endl;
+                exit(0);
+            } // $ - end of input
+            else {
+                std::cout << "Syntax error r" << std::endl;
+                exit(0);
+            }
+        }
         else
             X = *(Q.end());
 

@@ -1,7 +1,7 @@
-#include "hw2.h"
 #include <algorithm>
 #include <map>
 #include <iostream>
+#include "hw2.h"
 using namespace std;
 
 /**
@@ -165,8 +165,8 @@ std::set<tokens> ClauseFirst(std::vector<int> clause){
     std::vector<std::set<tokens> > VarFirst = First();
     for(int i = 0; i<clause.size(); i++) {
         //for all terminals and non terminals in the clause, unite them with the current First of the clause
-        std::set_union(first.begin(), first.end() ,VarFirst[i].begin(),
-                       VarFirst[i].end(),std::inserter(reinterpret_cast<std::set<tokens> &>(first),first.begin()));
+        std::set_union(first.begin(), first.end() ,VarFirst[clause[i]].begin(), // shani: VarFirst[i] -> VarFirst[cluse[i]]
+                       VarFirst[clause[i]].end(),std::inserter(reinterpret_cast<std::set<tokens> &>(first),first.begin()));
     }
     return first;
 }
@@ -245,7 +245,7 @@ std::vector<std::set<tokens> > Follow(){
                       }*/
                    // printf("\nsize of rhs = %d\n", (*it).rhs.size());
                     while (index < (*it).rhs.size()) {
-                        clause.insert(clause.begin() + index_clause, *(rhs_it + index));
+                        clause.insert(clause.begin() + index_clause, (*it).rhs[index]); //shani: rhs_it is iterator and not pointer
                         //  clause[index_clause] = (int)((*it).rhs[index]);
                         index++;
                         index_clause++;
@@ -275,7 +275,7 @@ std::vector<std::set<tokens> > Follow(){
 
             }
         }
-        printf("\ncurr non term = %d\n", nonterminal);
+     //  std:cout << "curr non term = " << nonterminal << std::endl;
         nonterminal++;
     }
     return follow;
@@ -399,8 +399,8 @@ void parser(){
     computeTable(M);
 
     int X; // will contain Q.pop
-    //int t = yylex(); // the next token
-    int t = SECTION; //for debug
+    int t = yylex(); // the next token
+    //int t = SECTION; //for debug
     //int index_d=0;
     int ruleNum;
 
@@ -441,9 +441,9 @@ void parser(){
             t = KEY;
         if(index_d==2)
             t = STRING;*/
-        //t = yylex(); // fetch the next token
+        t = yylex(); // fetch the next token
        // else
-            t=EF; //for debug
+           // t=EF; //for debug
     }
 }
 

@@ -1,6 +1,5 @@
-#line 2 "lex.yy.c"
 
-#line 4 "lex.yy.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1047,20 +1046,22 @@ char *yytext;
 #include <stdio.h>
 #include <stdlib.h> //for strtol
 #include <ctype.h> //for isxdigit
-#include "tokens.h"
 #include <string.h> //for strcmp
-void showToken(char* name);
+#include "tokens.h"
+
+typedef enum tokens tokens_t;
+tokens_t showToken(const char* name);
 void showTokenStr(char* name);
 void showTokenInt(char* name);
 void showTokenComm(char* name);
 
 
-#line 1059 "lex.yy.c"
+#line 1060 "lex.yy.c"
 
 #define INITIAL 0
-#define ka 1
-#define in 2
-#define k 3
+#define KA 1
+#define IN 2
+#define K 3
 
 #ifndef YY_NO_UNISTD_H
 /* Special case for "unistd.h", since it is non-ANSI. We include it way
@@ -1243,9 +1244,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 48 "lexer.lex"
+#line 50 "lexer.lex"
 
-#line 1249 "lex.yy.c"
+#line 1250 "lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -1370,100 +1371,100 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 49 "lexer.lex"
-{showToken((const char*)"KEY"); BEGIN(k);}
+#line 51 "lexer.lex"
+{ BEGIN(K); showToken((const char*)"KEY");}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 50 "lexer.lex"
-{showToken((const char*)"ASSIGN"); BEGIN(ka);}
+#line 52 "lexer.lex"
+{BEGIN(KA); showToken((const char*)"ASSIGN"); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 51 "lexer.lex"
+#line 53 "lexer.lex"
 {showToken("SECTION");}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 52 "lexer.lex"
-{showToken("INDENT"); BEGIN(in);}
+#line 54 "lexer.lex"
+{BEGIN(IN); showToken("INDENT");}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 53 "lexer.lex"
+#line 55 "lexer.lex"
 {showTokenComm("COMMENT");}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-case YY_STATE_EOF(ka):
-case YY_STATE_EOF(in):
-case YY_STATE_EOF(k):
-#line 54 "lexer.lex"
-{showToken("EOF"); exit(0);}
+case YY_STATE_EOF(KA):
+case YY_STATE_EOF(IN):
+case YY_STATE_EOF(K):
+#line 56 "lexer.lex"
+{showToken("EOF"); exit(0);}  //todo: fit this . shani
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 55 "lexer.lex"
+#line 57 "lexer.lex"
 {showToken("TRUE");}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 56 "lexer.lex"
+#line 58 "lexer.lex"
 {showToken("FALSE");}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 57 "lexer.lex"
+#line 59 "lexer.lex"
 {showTokenInt("INTEGER");}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 58 "lexer.lex"
+#line 60 "lexer.lex"
 {showToken("REAL");}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 59 "lexer.lex"
+#line 61 "lexer.lex"
 {showToken("PATH");}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 60 "lexer.lex"
+#line 62 "lexer.lex"
 {showToken("LINK");}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 61 "lexer.lex"
+#line 63 "lexer.lex"
 {showToken("SEP");}
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 62 "lexer.lex"
+#line 64 "lexer.lex"
 {showTokenStr("STRING");}
 	YY_BREAK
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 63 "lexer.lex"
+#line 65 "lexer.lex"
 BEGIN(0);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 64 "lexer.lex"
+#line 66 "lexer.lex"
 ;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 65 "lexer.lex"
+#line 67 "lexer.lex"
 {printf("Error %c\n", yytext[yyleng-1]);
 exit(0);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 68 "lexer.lex"
+#line 70 "lexer.lex"
 ECHO;
 	YY_BREAK
-#line 1467 "lex.yy.c"
+#line 1468 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2447,22 +2448,24 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 68 "lexer.lex"
+#line 70 "lexer.lex"
 
 
 
 int NameToToken(const char* name){
     const char* convert[]={"KEY","SECTION","INDENT","ASSIGN","TRUE","FALSE","INTEGER","REAL","STRING","PATH","LINK","SEP","EOF"};
-    for(int i=(int)KEY; i<((int)EF+1); i++){
+    int i=0;
+    for(i=(int)KEY; i<((int)EF+1); i++){
         if (strcmp(name,convert[i]))
             return i;
     }
     return -1; //we shouldnt reach here
 }
 
-void showToken(char*  name)
+tokens_t showToken(const char*  name)
 {
-    printf("%d", tokens(NameToToken(name)));
+    tokens_t to_return = (tokens_t)(NameToToken(name));
+    return to_return;
 }
 
 

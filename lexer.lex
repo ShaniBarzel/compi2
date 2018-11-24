@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h> //for strtol
 #include <ctype.h> //for isxdigit
-#include "tokens.h"
 #include <string.h> //for strcmp
-void showToken(char* name);
+#include "tokens.h"
+
+typedef enum tokens tokens_t;
+tokens_t showToken(const char* name);
 void showTokenStr(char* name);
 void showTokenInt(char* name);
 void showTokenComm(char* name);
@@ -44,22 +46,22 @@ string2     	{letter}+(([\x21-\x22\x24-\x2B\x2D-\x3A\x3C-\x7E])|((\x09|\x20)+([\
 string      	({string1}|{string2})
 comment     	({indent})*((\x23)|(\x3B))[^(\x0A|\x0D|(\x0D\x0A))]*
 
-%s ka in k
+%s KA IN K
 %%
-^{key}									 {showToken((const char*)"KEY"); BEGIN(k);}
-<k,ka>{assign}	   	 					 {showToken((const char*)"ASSIGN"); BEGIN(ka);}
+^{key}									 { BEGIN(K); showToken((const char*)"KEY");}
+<K,KA>{assign}	   	 					 {BEGIN(KA); showToken((const char*)"ASSIGN"); }
 {section}	 					 		 {showToken("SECTION");}
-^{indent}       						 {showToken("INDENT"); BEGIN(in);}
+^{indent}       						 {BEGIN(IN); showToken("INDENT");}
 {comment}					  		     {showTokenComm("COMMENT");}
-<<EOF>>        						     {showToken("EOF"); exit(0);}
-<in,ka>{true}/.* 					     {showToken("TRUE");}
-<in,ka>{false}/.*    					 {showToken("FALSE");}
-<in,ka>{integer}        		 		 {showTokenInt("INTEGER");}
-<in,ka>{real}          		 			 {showToken("REAL");}
-<in,ka>{path}           		 		 {showToken("PATH");}
-<in,ka>{link}           		 		 {showToken("LINK");}
-<in,ka>{sep}             				 {showToken("SEP");}
-<in,ka>{string}          				 {showTokenStr("STRING");}
+<<EOF>>        						     {showToken("EOF"); exit(0);}  //todo: fit this . shani
+<IN,KA>{true}/.* 					     {showToken("TRUE");}
+<IN,KA>{false}/.*    					 {showToken("FALSE");}
+<IN,KA>{integer}        		 		 {showTokenInt("INTEGER");}
+<IN,KA>{real}          		 			 {showToken("REAL");}
+<IN,KA>{path}           		 		 {showToken("PATH");}
+<IN,KA>{link}           		 		 {showToken("LINK");}
+<IN,KA>{sep}             				 {showToken("SEP");}
+<IN,KA>{string}          				 {showTokenStr("STRING");}
 {line}								     BEGIN(0);
 {whitespace}							 ;
 .									     {printf("Error %c\n", yytext[yyleng-1]);
@@ -69,16 +71,18 @@ exit(0);}
 
 int NameToToken(const char* name){
     const char* convert[]={"KEY","SECTION","INDENT","ASSIGN","TRUE","FALSE","INTEGER","REAL","STRING","PATH","LINK","SEP","EOF"};
-    for(int i=(int)KEY; i<((int)EF+1); i++){
+    int i=0;
+    for(i=(int)KEY; i<((int)EF+1); i++){
         if (strcmp(name,convert[i]))
             return i;
     }
     return -1; //we shouldnt reach here
 }
 
-void showToken(char*  name)
+tokens_t showToken(const char*  name)
 {
-    printf("%d", tokens(NameToToken(name)));
+    tokens_t to_return = (tokens_t)(NameToToken(name));
+    return to_return;
 }
 
 

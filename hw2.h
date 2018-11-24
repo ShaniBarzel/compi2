@@ -3,7 +3,8 @@
 
 #include "tokens.h"
 #include "grammar.h"
-
+//#include "lex.yy.c"
+//#include "lexer.lex"
 /**
  * determines which variables are nullable, i.e. can produce an empty word
  * calls print_nullable when finished

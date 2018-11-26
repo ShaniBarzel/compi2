@@ -8,10 +8,12 @@
 #include "tokens.h"
 
 typedef enum tokens tokens_t;
-tokens_t showToken(const char* name);
+
+/*tokens_t showToken(const char* name);
 void showTokenStr(char* name);
 void showTokenInt(char* name);
 void showTokenComm(char* name);
+*/
 
 %}
 %option yylineno
@@ -48,27 +50,25 @@ comment     	({indent})*((\x23)|(\x3B))[^(\x0A|\x0D|(\x0D\x0A))]*
 
 %s KA IN K
 %%
-^{key}									 { BEGIN(K); showToken((const char*)"KEY");}
-<K,KA>{assign}	   	 					 {BEGIN(KA); showToken((const char*)"ASSIGN"); }
-{section}	 					 		 {showToken("SECTION");}
-^{indent}       						 {BEGIN(IN); showToken("INDENT");}
-{comment}					  		     {showTokenComm("COMMENT");}
-<<EOF>>        						     {showToken("EOF"); exit(0);}  //todo: fit this . shani
-<IN,KA>{true}/.* 					     {showToken("TRUE");}
-<IN,KA>{false}/.*    					 {showToken("FALSE");}
-<IN,KA>{integer}        		 		 {showTokenInt("INTEGER");}
-<IN,KA>{real}          		 			 {showToken("REAL");}
-<IN,KA>{path}           		 		 {showToken("PATH");}
-<IN,KA>{link}           		 		 {showToken("LINK");}
-<IN,KA>{sep}             				 {showToken("SEP");}
-<IN,KA>{string}          				 {showTokenStr("STRING");}
+^{key}									 { BEGIN(K); return(KEY);}
+<K,KA>{assign}	   	 					 {BEGIN(KA); return(ASSIGN); }
+{section}	 					 		 {return(SECTION);}
+^{indent}       						 {BEGIN(IN); return(INDENT);}
+<<EOF>>        						     {return(EOF);}  //todo: fit this . shani
+<IN,KA>{true}/.* 					     {return(TRUE);}
+<IN,KA>{false}/.*    					 {return(FALSE);}
+<IN,KA>{integer}        		 		 {return(INTEGER);}
+<IN,KA>{real}          		 			 {return(REAL);}
+<IN,KA>{path}           		 		 {return(PATH);}
+<IN,KA>{link}           		 		 {return(LINK);}
+<IN,KA>{sep}             				 {return(SEP);}
+<IN,KA>{string}          				 {return(STRING);}
 {line}								     BEGIN(0);
 {whitespace}							 ;
-.									     {printf("Error %c\n", yytext[yyleng-1]);
-exit(0);}
+.									     {printf("Error %c\n", yytext[yyleng-1]);}
 
 %%
-
+/*
 int NameToToken(const char* name){
     const char* convert[]={"KEY","SECTION","INDENT","ASSIGN","TRUE","FALSE","INTEGER","REAL","STRING","PATH","LINK","SEP","EOF"};
     int i=0;
@@ -103,14 +103,14 @@ void BlockedStrHandle(int leng, char* yytext_t,char* n_yytext){
         if (i == leng){
             //the input limit reached but no '"' detected
             printf("Error unclosed string\n");
-            exit(0);
+            //exit(0);
         }
         if (yytext_t[i] == '\\'){
             i++; //skip the "\"
             if (i==leng){
                 // \ is at the end of the string
                 printf("Error %c\n", '\\');
-                exit(0);
+              //  exit(0);
             }
             if (yytext_t[i] == 'x' || yytext_t[i] == 'X'){
                 char *ptr;
@@ -122,7 +122,7 @@ void BlockedStrHandle(int leng, char* yytext_t,char* n_yytext){
                 if (decVal<0 || decVal > 255 || !isxdigit(hexVal[0]) ||!isxdigit(hexVal[1])){
                     // \xdd - but dd is not a valid ascii value
                     printf("Error undifined escape sequence %c\n", yytext_t[i]);
-                    exit(0);
+                //    exit(0);
                 }
                 else{
                     char c = decVal; //converts int ascii value into it's suitiable char
@@ -195,7 +195,7 @@ void BlockedStrHandle(int leng, char* yytext_t,char* n_yytext){
                         break;
                     default:
                         printf("Error undefined escape sequence %c\n", yytext_t[i]);
-                        exit(0);
+                  //      exit(0);
                 }
             }
         }
@@ -292,3 +292,4 @@ void showTokenComm(char*  name)
     }
     printf("%d %s %s\n",temp, name, n_yytext);
 }
+*/

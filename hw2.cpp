@@ -7,7 +7,7 @@ using namespace std;
 /**
 *** ContainsTerminals by Shani and Racheli
  * input: terminals and nonterminals vector
- * output: if the vector contains only terminals
+ * output: if the vector contains a terminal
  */
 bool ContainsTerminals(std::vector<int> tavnit){
     std::vector<int>::const_iterator it = tavnit.begin();
@@ -316,23 +316,34 @@ std::vector<std::set<tokens> > Select(){
 
 //TODO: add documantation
 void computeTable(std::map<nonterminal,std::map<tokens,int> > M){
+    std::cout << "Compute table" << std::endl;
     std::vector<std::set<tokens> > select = Select();
     int counter =0; //rules counter
 
     // iterate all the rules
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+        std::cout << "rule:" << counter << std::endl;
         std::set<tokens> terminals = select[counter]; // the "select" terminal set of the rule
         // for each terminal in the select, add mapping between the Non termonal in the lest section of the rule and the map of the terminal and the rule
         for (std::set<tokens>::const_iterator Terms_it = terminals.begin(); Terms_it != terminals.end(); Terms_it++) {
+            std::cout << "terminal:" <<*Terms_it << std::endl;
             const std::pair<tokens,int> pair(*Terms_it,counter); // a pair: (terminal, rule number)
-            std::map<tokens,int> MapPair = std::map<tokens,int>(); // mapping the terminal to the rule
-            MapPair.insert(pair);
-            const std::pair<nonterminal ,std::map<tokens,int> > ToAdd((*it).lhs,MapPair); // maaping the nonterminal to the map of the terminal and the rule number
-            const std::pair<nonterminal ,std::map<tokens,int> >& ToAddRef(ToAdd); // reference the the pair
-            M.insert(ToAddRef);
-        }
+            std::cout << "create pair: " <<counter  <<", " << *Terms_it << std::endl;
+            std::map<nonterminal,std::map<tokens,int> >::iterator temp = (M.find((*it).lhs));
+            if (temp != M.end()){
+                std::cout << "nontermonal found:" << (*it).lhs << std::endl;
+                (*temp).second.insert(pair);
+            }
+            else{ //nonterminal does not have a place in the map yet
+                std::cout << "nontermonal set:" << (*it).lhs << std::endl;
+                std::map<tokens,int> MapPair = std::map<tokens,int>(); // mapping the terminal to the rule
+                MapPair.insert(pair);
+                const std::map<tokens,int>& MapPairRef(MapPair); // a reference to the map  pair
+                const std::pair<nonterminal ,std::map<tokens,int> > ToAdd((*it).lhs,MapPair); // maaping the nonterminal to the map of the terminal and the rule number
+                M.insert(ToAdd);
+            }
         counter++;
-
+        }
     }
 }
 
@@ -348,6 +359,7 @@ bool MATCH (int X, int t){
  * calls print_nullable when finished
  */
 void compute_nullable(){
+    std:cout << "compute_nullable" << std::endl; //todo: delete. this is for debug
     std::vector<bool> IsNonterminalsNullable = IsNullableNon(); //answer vector
     //init answer vector to false
     print_nullable(IsNonterminalsNullable);
@@ -358,6 +370,8 @@ void compute_nullable(){
  * calls print_first when finished
  */
 void compute_first(){
+    std:cout << "compute_first" << std::endl; //todo: delete. this is for debug
+
     std::vector<std::set<tokens> > vec1 = First(); // vec1 contains terminals too
     std::vector<std::set<tokens> > vec;
    // vec.reserve(NONTERMINAL_ENUM_SIZE);
@@ -375,6 +389,7 @@ void compute_first(){
  * calls print_follow when finished
  */
 void compute_follow(){
+    std:cout << "compute_follow" << std::endl; //todo: delete. this is for debug
     std::vector<std::set<tokens> > vec = Follow();
     print_follow(vec);
 }
@@ -384,6 +399,7 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
+    std:cout << "compute_select" << std::endl; //todo: delete. this is for debug
     std::vector<std::set<tokens> > vec = Select();
     print_select(vec);
 }
@@ -391,7 +407,7 @@ void compute_select(){
  * implements an LL(1) parser for the grammar using yylex()
  */
 void parser(){
-
+    std:cout << "parser" << std::endl; //todo: delete. this is for debug
     std::vector<int> Q;
     //initialization (rach)
     Q.push_back(nonterminal(S));
@@ -399,7 +415,9 @@ void parser(){
     computeTable(M);
 
     int X; // will contain Q.pop
+    std::cout << "before" << std::endl; //todo: delete. this is for debug
     int t = yylex(); // the next token
+    std::cout << "after" << std::endl; //todo: delete. this is for debug
     //int t = SECTION; //for debug
     //int index_d=0;
     int ruleNum;
@@ -408,7 +426,9 @@ void parser(){
     while(true){
         //TODO: fix yylex
         if(Q.empty()) {
-           // printf("\nhi\n");
+            std::cout << "empty queue" << std::endl; //todo: delete. this is for debug
+
+            // printf("\nhi\n");
             if (t == EF) {
                 std::cout << "Success" << std::endl;
                 exit(0);
@@ -424,9 +444,24 @@ void parser(){
         if (X > 10)
             MATCH (X,t);
         else{
+            std::cout << "predict" << std::endl; //todo: delete. this is for debug
+            std::cout << t << std::endl;
+            std::cout << (nonterminal)X << std::endl;
             // PREDICT
-            try{ruleNum = ((M.at((nonterminal)X))).at((tokens)t);}
-            catch (...){std::cout << "Syntax error" << std::endl; exit(0);}
+            //try{ruleNum = ((M.at((nonterminal)X))).at((tokens)t);}
+            std::map<nonterminal,std::map<tokens,int> >::iterator mapTemp = (M.find((nonterminal)X));
+            if (mapTemp != M.end()){
+                std::map<tokens,int>::iterator TokTemp = (*mapTemp).second.find((tokens)t);
+                if (TokTemp != (*mapTemp).second.end()){
+                    ruleNum = (*TokTemp).second;
+                }
+                else{
+                    std::cout << "Syntax error" << std::endl; exit(0);
+                }
+            }
+            else{
+                std::cout << "Syntax error" << std::endl; exit(0);
+            }
             std::cout << ruleNum << std::endl; //print the number of rule that was used
             Q.pop_back(); // get X out of the stack
             grammar_rule Rule = grammar[ruleNum-1];

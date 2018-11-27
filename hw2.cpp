@@ -3,7 +3,7 @@
 #include <iostream>
 #include "hw2.h"
 
-/*** CheckNullRule by Shani and Racheli
+/***by
  * input: Grammer Rule and a vector that contains for each non terminal if it is nullable
  * output: true if the rule is "nullable" = the variable in the right section of the rule, can derive epsilon by using this rule
  */
@@ -86,8 +86,7 @@ std::vector<bool> IsNullableNon(){
  */
 std::vector<std::set<tokens> > First(){
     std::vector<bool> IsNull = IsNullableNon();
-    std::vector<std::set<tokens> > vec;     //debug rach
-  // vec.reserve(EF); //init vector to the size of terminals + non_terminals
+    std::vector<std::set<tokens> > vec;
    for(int i=0;i<EF;i++){
         vec.insert(vec.begin()+i,std::set<tokens>());
     }
@@ -132,7 +131,7 @@ std::vector<std::set<tokens> > First(){
                         nothing_changed = false; //if we reached here, than the current non-terminal first's was updated
 
                     // if the current variable is not nullable, the rest of the right secion variables is irrelevent
-                    if ((*R_it)>10 || !IsNull[*R_it]) //SHANI
+                    if ((*R_it)>10 || !IsNull[*R_it]) //SHANI: i changed is to IsNull, it was very uneffithient
                         break; // (from inner for)
                 }
             }
@@ -158,7 +157,7 @@ std::set<tokens> ClauseFirst(std::vector<int> clause){
                        VarFirst[clause[i]].end(),std::inserter(reinterpret_cast<std::set<tokens> &>(first),first.begin()));
 
         // if the current variable is not nullable, the rest of the right secion variables is irrelevent
-        if (clause[i]>10 || !IsNull[clause[i]]) //SHANI
+        if (clause[i]>10 || !IsNull[clause[i]]) //SHANI: i added clause[i]>10
             break; // (from inner for)
     }
     return first;
@@ -209,19 +208,17 @@ std::vector<std::set<tokens> > Follow(){
                     std::set<tokens> first;
                     std::vector<int> clause;
                     int index = index_rhs + 1;
-                    int index_clause = 0;
 
                     while (index < (*it).rhs.size()) {
                         clause.push_back((*it).rhs[index]);
                         index++;
-                        index_clause++;
                     }
                     first = ClauseFirst(clause);
 
                     std::set_union(follow[nonterminal].begin(), follow[nonterminal].end(), first.begin(),
                                    first.end(), std::inserter(follow[nonterminal], follow[nonterminal].begin()));
 
-                    //IsNull does not work here :( I added this lines who does the same. shani.
+                    //IsNullclause does not work here :( I added this lines who does the same. SHANI.
                     bool ClauseIsNull= true;
                     for(int var=0; var<clause.size();var++){
                         if(clause[var]>NONTERMINAL_ENUM_SIZE || !IsNonterminalsNullable[clause[var]]){
@@ -251,12 +248,11 @@ std::vector<std::set<tokens> > Follow(){
         }
         nonterminal++;
     }
- //  print_follow(follow);
     return follow;
 
 }
 
-//TODO: add ducomantation
+
 std::vector<std::set<tokens> > Select(){
     std::vector<bool> IsNonterminalsNullable = IsNullableNon();
     std::vector<std::set<tokens> > vec;
@@ -274,7 +270,7 @@ std::vector<std::set<tokens> > Select(){
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
         std::set<tokens > first_set_rhs = ClauseFirst((*it).rhs);
 
-        //IsNull does not work here :( I added this lines who does the same. shani. todo:delete
+        //IsNull does not work here :( I added this lines who does the same. SHANI.
         //Check if the rigth part is nullable
         bool ClauseIsNull= true;
         for(int var=0; var<(*it).rhs.size();var++){
@@ -297,8 +293,8 @@ std::vector<std::set<tokens> > Select(){
     return vec;
 }
 
-//TODO: add documantation
-void computeTable(std::map<nonterminal,std::map<tokens,int> >& M){
+
+void computeTable(std::map<nonterminal,std::map<tokens,int> >& M){ //SHANI: reference!!
    // std::cout << "Compute table" << std::endl;
     std::vector<std::set<tokens> > select = Select();
     int rule =0; //rules counter
@@ -313,7 +309,7 @@ void computeTable(std::map<nonterminal,std::map<tokens,int> >& M){
      }
 }
 
-//TODO: add documantation
+
 bool MATCH (int X, int t){
     return (X==t);
 }
@@ -325,7 +321,6 @@ bool MATCH (int X, int t){
  * calls print_nullable when finished
  */
 void compute_nullable(){
-   // std:cout << "compute_nullable" << std::endl; //todo: delete. this is for debug
     std::vector<bool> IsNonterminalsNullable = IsNullableNon(); //answer vector
     //init answer vector to false
     print_nullable(IsNonterminalsNullable);
@@ -336,13 +331,15 @@ void compute_nullable(){
  * calls print_first when finished
  */
 void compute_first(){
-    //std:cout << "compute_first" << std::endl; //todo: delete. this is for debug
 
     std::vector<std::set<tokens> > vec1 = First(); // vec1 contains terminals too
     std::vector<std::set<tokens> > vec;
 
-    for(int i=0; i<NONTERMINAL_ENUM_SIZE;i++){  //copy all the non terminals to vec
+    for(int i=0; i<NONTERMINAL_ENUM_SIZE;i++){  //save place
         vec.insert(vec.begin()+i,std::set<tokens>());
+    }
+    for(int i=0; i<NONTERMINAL_ENUM_SIZE;i++){  //copy all the non terminals to vec
+        vec[i]=vec1[i];
     }
     print_first(vec);
 }
@@ -353,7 +350,6 @@ void compute_first(){
  * calls print_follow when finished
  */
 void compute_follow(){
-    //std:cout << "compute_follow" << std::endl; //todo: delete. this is for debug
     std::vector<std::set<tokens> > vec = Follow();
     print_follow(vec);
 }
@@ -363,7 +359,6 @@ void compute_follow(){
  * calls print_select when finished
  */
 void compute_select(){
-    std::cout << "compute_select" << std::endl; //todo: delete. this is for debug
     std::vector<std::set<tokens> > vec = Select();
     print_select(vec);
 }
@@ -371,7 +366,6 @@ void compute_select(){
  * implements an LL(1) parser for the grammar using yylex()
  */
 void parser(){
-  //  std::cout << "parser" << std::endl; //todo: delete. this is for debug
     std::vector<int> Q;
     //initialization
     Q.push_back(nonterminal(S));
@@ -379,19 +373,17 @@ void parser(){
     computeTable(M);
 
     int X; // will contain Q.pop
-    std::cout << "before" << std::endl; //todo: delete. this is for debug
     int t = yylex(); // the next token
-    //int t = SECTION; //for debug
-    std::cout << "after" << std::endl; //todo: delete. this is for debug
     int ruleNum;
 
 
     while(true){
-        //TODO: fix yylex
-        if(Q.empty()) {
-            std::cout << "empty queue" << std::endl; //todo: delete. this is for debug
+        if(t==-1){ //ignore comments. SHANI
+            t = yylex(); // fetch the next token
+            continue;
+        }
 
-            // printf("\nhi\n");
+        if(Q.empty()) {
             if (t == EF) {
                 std::cout << "Success" << std::endl;
                 return;
@@ -402,21 +394,22 @@ void parser(){
             }
         }
         else
-            X = (Q.front());
+            X = (Q.back());
 
-        if (X > 10)
-            MATCH (X,t);
-        else{
-            std::cout << "predict" << std::endl; //todo: delete. this is for debug
-            std::cout << t << std::endl;
-            std::cout << (nonterminal)X << std::endl;
-            // PREDICT
-
+        if (X > 10) { // head of the stack is a terminal
+            if(!MATCH(X, t)) {
+                std::cout << "Syntax error" << std::endl; //SHANI : we forgot it. this is importent!
+                return;
+            }
+            Q.pop_back(); //SHANI : we forgot it. this is importent!
+            t = yylex(); // fetch the next token //SHANI: i moved it to here, we shpuldnt accept new input before match
+        }
+        else{// PREDICT
             // try to find X in the map
             std::map<nonterminal ,std::map<tokens, int> >::iterator Find_Ans = M.find((nonterminal)X);
                 if (Find_Ans == M.end()){
                     //if X is not in the map
-                    std::cout << "Syntax error1" << std::endl; return; //todo: delete1
+                    std::cout << "Syntax error" << std::endl; return;
 
                 }
                 else {// X is in the map
@@ -424,7 +417,7 @@ void parser(){
                     std::map<tokens, int>::iterator Find_Ans2 = ((*Find_Ans).second).find((tokens)t);
                     if (Find_Ans2 == ((*Find_Ans).second).end()){
                         // if t is not in the X map
-                        std::cout << "Syntax error2" << std::endl; return; //todo: delete2
+                        std::cout << "Syntax error" << std::endl; return;
 
                     }
                     else{ // t is in the X map
@@ -432,23 +425,16 @@ void parser(){
                     }
                 }
 
-            }
             std::cout << ruleNum+1 << std::endl; //print the number of rule that was used
-            Q.pop_back(); // get X out of the stack
+            Q.pop_back(); // get X out of the stack Q
             grammar_rule Rule = grammar[ruleNum];
             std::vector<int> ToPush = Rule.rhs;
-            for(std::vector<int>::reverse_iterator var = ToPush.rbegin(); var != ToPush.rend(); ++var){
-                // push the right side of the rule from end to begin
-                Q.push_back(*var);
+                for(std::vector<int>::reverse_iterator var = ToPush.rbegin(); var != ToPush.rend(); ++var){
+                    // push the right side of the rule from end to begin
+                    Q.push_back(*var);
+                }
+
             }
-        t = yylex(); // fetch the next token
-        //t = EF; // for debug
     }
 
 }
-
-
-/*
- * implemented in lex.yy.c (generated from lexer.lex)
- */
-int yylex();

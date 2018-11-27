@@ -43,9 +43,10 @@ comment     	({indent})*((\x23)|(\x3B))[^(\x0A|\x0D|(\x0D\x0A))]*
 %%
 ^{key}									 { BEGIN(K); return(KEY);}
 <K,KA>{assign}	   	 					 {BEGIN(KA); return(ASSIGN); }
+{comment}                                {return(-1);}
 {section}	 					 		 {return(SECTION);}
 ^{indent}       						 {BEGIN(IN); return(INDENT);}
-<<EOF>>        						     {return(EOF);}
+<<EOF>>        						     {return(EF);}
 <IN,KA>{true}/.* 					     {return(TRUE);}
 <IN,KA>{false}/.*    					 {return(FALSE);}
 <IN,KA>{integer}        		 		 {return(INTEGER);}
@@ -56,5 +57,5 @@ comment     	({indent})*((\x23)|(\x3B))[^(\x0A|\x0D|(\x0D\x0A))]*
 <IN,KA>{string}          				 {return(STRING);}
 {line}								     BEGIN(0);
 {whitespace}							 ;
-.									     {printf("Error %c\n", yytext[yyleng-1]);exit(0);}
+.									     {printf("Error %c\n", yytext[yyleng-1]); exit(0);}
 %%

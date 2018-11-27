@@ -25,8 +25,11 @@ bool CheckNullRule(grammar_rule Gr, std::vector<bool> IsNonterminalsNullable){
     if (Gr.rhs.empty())
         return true; //the rule has only epsilon in the right section
 
-    if (ContainsTerminals(Gr.rhs))
-        return false; //the rule contains terminal in the right section (so the rule is not nullable)
+    //contain Terminals did not work here so i has to do this:
+    for(int var=0; var<Gr.rhs.size(); var++){
+        if(Gr.rhs[var]>=11)
+            return false; //the rule contains terminal in the right section (so the rule is not nullable)
+    }
 
     //if we reached here, the rule contains only non-terminals in the right section
 
@@ -45,10 +48,10 @@ bool CheckNullRule(grammar_rule Gr, std::vector<bool> IsNonterminalsNullable){
  */
 std::vector<bool> IsNullableNon(){
     std::vector<bool> IsNonterminalsNullable; //answer vector
-    IsNonterminalsNullable.reserve(NONTERMINAL_ENUM_SIZE);
+   // IsNonterminalsNullable.reserve(NONTERMINAL_ENUM_SIZE);
     //init answer vector to false
     for (int i=0; i< NONTERMINAL_ENUM_SIZE; i++){
-        IsNonterminalsNullable[i]=false;;
+        IsNonterminalsNullable.push_back(false);
     }
 
     bool nothing_changed = true;
@@ -88,6 +91,7 @@ std::vector<bool> IsNullableNon(){
 
         nonterminal++;
     }
+   // print_nullable(IsNonterminalsNullable); //for debug
     return IsNonterminalsNullable;
 }
 
@@ -97,6 +101,7 @@ std::vector<bool> IsNullableNon(){
  * output: a vector, containing the first of all variabls
  */
 std::vector<std::set<tokens> > First(){
+    std::vector<bool> IsNull = IsNullableNon();
     std::vector<std::set<tokens> > vec;     //debug rach
   // vec.reserve(EF); //init vector to the size of terminals + non_terminals
    for(int i=0;i<EF;i++){
@@ -130,11 +135,11 @@ std::vector<std::set<tokens> > First(){
         for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
             if  ((*it).lhs == nonterminal) {
                 // if the currnet rule left section is the currnet nonterminal
-                std::set<tokens>::iterator temp = vec.operator[](nonterminal).begin();
+                //std::set<tokens>::iterator temp = vec.operator[](nonterminal).begin();
 
                 for(std::vector<int>::const_iterator R_it = (*it).rhs.begin(); R_it!=(*it).rhs.end(); R_it++) {
                     int current_first_size = vec[nonterminal].size();
-                    //unite the "firsts" the nonterminals
+                    //unite the "firsts" of the nonterminals
                     std::set_union(vec[nonterminal].begin(), vec[nonterminal].end() ,vec[*R_it].begin(),
                                    vec[*R_it].end(),std::inserter(vec[nonterminal],vec[nonterminal].begin()));
 
@@ -144,7 +149,7 @@ std::vector<std::set<tokens> > First(){
                         nothing_changed = false; //if we reached here, than the current non-terminal first's was updated
 
                     // if the current variable is not nullable, the rest of the right secion variables is irrelevent
-                    if (!IsNullableNon()[*R_it])
+                    if ((*R_it)>10 || !IsNull[*R_it]) //SHANI
                         break; // (from inner for)
                 }
             }
@@ -152,6 +157,7 @@ std::vector<std::set<tokens> > First(){
 
         nonterminal++;
     }
+ //   print_first(vec); //for debug
     return vec;
 }
 
@@ -161,12 +167,17 @@ std::vector<std::set<tokens> > First(){
  * output: the clause "first"
  */
 std::set<tokens> ClauseFirst(std::vector<int> clause){
+    std::vector<bool> IsNull = IsNullableNon();
     std::set<tokens > first; // return vactor
     std::vector<std::set<tokens> > VarFirst = First();
     for(int i = 0; i<clause.size(); i++) {
-        //for all terminals and non terminals in the clause, unite them with the current First of the clause
-        std::set_union(first.begin(), first.end() ,VarFirst[clause[i]].begin(), // shani: VarFirst[i] -> VarFirst[cluse[i]]
+        //if we reached here, current var in the right section is nullable
+        std::set_union(first.begin(), first.end() ,VarFirst[clause[i]].begin(),
                        VarFirst[clause[i]].end(),std::inserter(reinterpret_cast<std::set<tokens> &>(first),first.begin()));
+
+        // if the current variable is not nullable, the rest of the right secion variables is irrelevent
+        if (clause[i]>10 || !IsNull[clause[i]]) //SHANI
+            break; // (from inner for)
     }
     return first;
 }
@@ -176,9 +187,9 @@ std::set<tokens> ClauseFirst(std::vector<int> clause){
  * input: a clause as int vector
  * output: true if the clause is nullable
  */
-bool IsNullableClause(const std::vector<int> clause){
+bool IsNullableClause(std::vector<int> Clause){
     std::vector<bool> IsNull = IsNullableNon();
-    for(int i = 0; i<clause.size(); i++) {
+    for(int i = 0; i<Clause.size(); i++) {
         //if one of the variables in the clause is nullable, the clause is not nullable
         if (i>NONTERMINAL_ENUM_SIZE || !IsNull[i])
             return false;
@@ -191,6 +202,7 @@ bool IsNullableClause(const std::vector<int> clause){
  * output: a vector that contains the follow of each Non Terminal
  */
 std::vector<std::set<tokens> > Follow(){
+    std::vector<bool> IsNonterminalsNullable = IsNullableNon();
     std::vector<std::set<tokens> > follow;
     //follow.reserve(EF); //init vector to the size of non_terminals
     std::set<tokens> first_set;
@@ -245,8 +257,7 @@ std::vector<std::set<tokens> > Follow(){
                       }*/
                    // printf("\nsize of rhs = %d\n", (*it).rhs.size());
                     while (index < (*it).rhs.size()) {
-                        clause.insert(clause.begin() + index_clause, (*it).rhs[index]); //shani: rhs_it is iterator and not pointer
-                        //  clause[index_clause] = (int)((*it).rhs[index]);
+                        clause.push_back((*it).rhs[index]);
                         index++;
                         index_clause++;
                     }
@@ -254,7 +265,17 @@ std::vector<std::set<tokens> > Follow(){
 
                     std::set_union(follow[nonterminal].begin(), follow[nonterminal].end(), first.begin(),
                                    first.end(), std::inserter(follow[nonterminal], follow[nonterminal].begin()));
-                    if (IsNullableClause(clause)) {
+
+                    //IsNull does not work here :( I added this lines who does the same. shani.
+                    bool ClauseIsNull= true;
+                    for(int var=0; var<clause.size();var++){
+                        if(clause[var]>NONTERMINAL_ENUM_SIZE || !IsNonterminalsNullable[clause[var]]){
+                            ClauseIsNull = false;
+                            break;
+                        }
+                    }
+
+                    if(ClauseIsNull){
                         std::set<tokens> follow_lhs;
                         follow_lhs = follow[(*it).lhs];
                         std::set_union(follow[nonterminal].begin(), follow[nonterminal].end(), follow_lhs.begin(),
@@ -278,13 +299,14 @@ std::vector<std::set<tokens> > Follow(){
      //  std:cout << "curr non term = " << nonterminal << std::endl;
         nonterminal++;
     }
+ //  print_follow(follow);
     return follow;
 
 }
 
 //TODO: add ducomantation
 std::vector<std::set<tokens> > Select(){
-
+    std::vector<bool> IsNonterminalsNullable = IsNullableNon();
     std::vector<std::set<tokens> > vec;
     //vec.reserve(grammar.size());
     for(int k=0;k<grammar.size();k++){
@@ -299,8 +321,17 @@ std::vector<std::set<tokens> > Select(){
     int i =0; //rules counter
     for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
         std::set<tokens > first_set_rhs = ClauseFirst((*it).rhs);
-        if (IsNullableClause(((*it).rhs))){
 
+        //IsNull does not work here :( I added this lines who does the same. shani.
+        bool ClauseIsNull= true;
+        for(int var=0; var<(*it).rhs.size();var++){
+            if((*it).rhs[var]>NONTERMINAL_ENUM_SIZE || !IsNonterminalsNullable[(*it).rhs[var]]){
+                ClauseIsNull = false;
+                break;
+            }
+        }
+
+        if (ClauseIsNull){
             std::set_union(first_set_rhs.begin(),first_set_rhs.end() ,
                            NonTermsFollow[(*it).lhs].begin(),NonTermsFollow[(*it).lhs].end(),
                            std::inserter(vec[i],vec[i].begin()));
@@ -315,36 +346,47 @@ std::vector<std::set<tokens> > Select(){
 }
 
 //TODO: add documantation
-void computeTable(std::map<nonterminal,std::map<tokens,int> > M){
-    std::cout << "Compute table" << std::endl;
+void computeTable(std::map<nonterminal,std::map<tokens,int> >& M){
+   // std::cout << "Compute table" << std::endl;
     std::vector<std::set<tokens> > select = Select();
-    int counter =0; //rules counter
-
+   // print_select(select);
+    int rule =0; //rules counter
+      //iterate the select vectors of all the rules
+     for (std::vector<std::set<tokens> >::const_iterator Terms_set = select.begin(); Terms_set != select.end(); Terms_set++){
+         //itarate all the nonterminals in the rule's select vector
+         nonterminal NonTerm = grammar[rule].lhs;
+         for(std::set<tokens>::const_iterator terminal = (*Terms_set).begin(); terminal!=(*Terms_set).end(); terminal++){
+             M[NonTerm][*terminal]=rule;
+            // std::cout<< M[NonTerm][*terminal] << std::endl;
+            // std::cout << "Rule: " << rule << " nonterminal: "<< NonTerm << "terminal: "<< *terminal <<std::endl;
+         }
+         rule++;
+     }
     // iterate all the rules
-    for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
-        std::cout << "rule:" << counter << std::endl;
-        std::set<tokens> terminals = select[counter]; // the "select" terminal set of the rule
+    //for (std::vector<grammar_rule>::const_iterator it = grammar.begin(); it != grammar.end(); it++) {
+      //  std::cout << "rule:" << counter << std::endl;
+        //std::set<tokens> terminals = select[counter]; // the "select" terminal set of the rule
         // for each terminal in the select, add mapping between the Non termonal in the lest section of the rule and the map of the terminal and the rule
-        for (std::set<tokens>::const_iterator Terms_it = terminals.begin(); Terms_it != terminals.end(); Terms_it++) {
-            std::cout << "terminal:" <<*Terms_it << std::endl;
-            const std::pair<tokens,int> pair(*Terms_it,counter); // a pair: (terminal, rule number)
-            std::cout << "create pair: " <<counter  <<", " << *Terms_it << std::endl;
-            std::map<nonterminal,std::map<tokens,int> >::iterator temp = (M.find((*it).lhs));
-            if (temp != M.end()){
-                std::cout << "nontermonal found:" << (*it).lhs << std::endl;
-                (*temp).second.insert(pair);
-            }
-            else{ //nonterminal does not have a place in the map yet
-                std::cout << "nontermonal set:" << (*it).lhs << std::endl;
-                std::map<tokens,int> MapPair = std::map<tokens,int>(); // mapping the terminal to the rule
-                MapPair.insert(pair);
-                const std::map<tokens,int>& MapPairRef(MapPair); // a reference to the map  pair
-                const std::pair<nonterminal ,std::map<tokens,int> > ToAdd((*it).lhs,MapPair); // maaping the nonterminal to the map of the terminal and the rule number
-                M.insert(ToAdd);
-            }
-        counter++;
-        }
-    }
+        //for (std::set<tokens>::const_iterator Terms_it = terminals.begin(); Terms_it != terminals.end(); Terms_it++) {
+          //  std::cout << "terminal:" <<*Terms_it << std::endl;
+            //const std::pair<tokens,int> pair(*Terms_it,counter); // a pair: (terminal, rule number)
+            //std::cout << "create pair: " <<counter  <<", " << *Terms_it << std::endl;
+            //std::map<nonterminal,std::map<tokens,int> >::iterator temp = (M.find((*it).lhs));
+            //if (temp != M.end()){
+              //  std::cout << "nontermonal found:" << (*it).lhs << std::endl;
+                //(*temp).second.insert(pair);
+            //}
+            //else{ //nonterminal does not have a place in the map yet
+              //  std::cout << "nontermonal set:" << (*it).lhs << std::endl;
+                //std::map<tokens,int> MapPair = std::map<tokens,int>(); // mapping the terminal to the rule
+                //MapPair.insert(pair);
+               // const std::map<tokens,int>& MapPairRef(MapPair); // a reference to the map  pair
+                //const std::pair<nonterminal ,std::map<tokens,int> > ToAdd((*it).lhs,MapPair); // maaping the nonterminal to the map of the terminal and the rule number
+                //M.insert(ToAdd);
+           // }
+        //counter++;
+        //}
+    //}
 }
 
 //TODO: add documantation
@@ -407,16 +449,24 @@ void compute_select(){
  * implements an LL(1) parser for the grammar using yylex()
  */
 void parser(){
-    std:cout << "parser" << std::endl; //todo: delete. this is for debug
+    std::cout << "parser" << std::endl; //todo: delete. this is for debug
     std::vector<int> Q;
     //initialization (rach)
     Q.push_back(nonterminal(S));
     std::map<nonterminal, std::map<tokens, int> > M;
     computeTable(M);
+    //std::cout<<M[(nonterminal)0].size()<<std::endl;
+   // for(int j=0; j<M.size(); j++){
+      //  for(int t=0; t<M[(nonterminal)j].size(); t++){
+        //    std::cout<<M[(nonterminal)j].size()<<std::endl;
+            //std::cout << M[(nonterminal)j][tokens(t)] << std::endl;
+       // }
+  //  }
 
     int X; // will contain Q.pop
     std::cout << "before" << std::endl; //todo: delete. this is for debug
-    int t = yylex(); // the next token
+    //int t = yylex(); // the next token
+    int t = SECTION; //for debug
     std::cout << "after" << std::endl; //todo: delete. this is for debug
     //int t = SECTION; //for debug
     //int index_d=0;
@@ -431,11 +481,11 @@ void parser(){
             // printf("\nhi\n");
             if (t == EF) {
                 std::cout << "Success" << std::endl;
-                exit(0);
+                return;
             } // $ - end of input
             else {
                 std::cout << "Syntax error" << std::endl;
-                exit(0);
+                return;
             }
         }
         else
@@ -448,38 +498,54 @@ void parser(){
             std::cout << t << std::endl;
             std::cout << (nonterminal)X << std::endl;
             // PREDICT
-            //try{ruleNum = ((M.at((nonterminal)X))).at((tokens)t);}
-            std::map<nonterminal,std::map<tokens,int> >::iterator mapTemp = (M.find((nonterminal)X));
-            if (mapTemp != M.end()){
-                std::map<tokens,int>::iterator TokTemp = (*mapTemp).second.find((tokens)t);
-                if (TokTemp != (*mapTemp).second.end()){
-                    ruleNum = (*TokTemp).second;
+
+            // try to find X in the map
+            std::map<nonterminal ,std::map<tokens, int> >::iterator Find_Ans = M.find((nonterminal)X);
+            if (Find_Ans == M.end()){
+                //if X is not in the map
+                std::cout << "Syntax error1" << std::endl; return; //todo: delete1
+
+            }
+            else {// X is in the map
+                //try to find t in the X map
+                std::map<tokens, int>::iterator Find_Ans2 = ((*Find_Ans).second).find((tokens)t);
+                if (Find_Ans2 == ((*Find_Ans).second).end()){
+                    // if t is not in the X map
+                    std::cout << "Syntax error2" << std::endl; return; //todo: delete2
+
                 }
-                else{
-                    std::cout << "Syntax error" << std::endl; exit(0);
+                else{ // t is in the X map
+                    ruleNum=(*Find_Ans2).second;
                 }
             }
-            else{
-                std::cout << "Syntax error" << std::endl; exit(0);
+
+
+
+             //std::map<nonterminal,std::map<tokens,int> >::iterator mapTemp = (M.find((nonterminal)X));
+            //if (mapTemp != M.end()){
+             //   std::map<tokens,int>::iterator TokTemp = (*mapTemp).second.find((tokens)t);
+               // if (TokTemp != (*mapTemp).second.end()){
+                 //   ruleNum = (*TokTemp).second;
+                //}
+                //else{
+                 //   std::cout << "Syntax error" << std::endl; exit(0);
+                //}
+           // }
+            //else{
+                //std::cout << "Syntax error" << std::endl; exit(0);
             }
-            std::cout << ruleNum << std::endl; //print the number of rule that was used
+            std::cout << ruleNum+1 << std::endl; //print the number of rule that was used
             Q.pop_back(); // get X out of the stack
-            grammar_rule Rule = grammar[ruleNum-1];
+            grammar_rule Rule = grammar[ruleNum];
             std::vector<int> ToPush = Rule.rhs;
             for(std::vector<int>::reverse_iterator var = ToPush.rbegin(); var != ToPush.rend(); ++var){
                 // push the right side of the rule from end to begin
                 Q.push_back(*var);
             }
-        }
-        /*index_d++;
-        if(index_d==1)
-            t = KEY;
-        if(index_d==2)
-            t = STRING;*/
-        t = yylex(); // fetch the next token
-       // else
-           // t=EF; //for debug
+        //t = yylex(); // fetch the next token
+        t = EF; // for debug
     }
+
 }
 
 
